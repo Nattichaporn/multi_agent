@@ -12,49 +12,47 @@
     *   ประเภท: Agent (Root)
     *   หน้าที่: เป็น Agent ตัวแรกที่สื่อสารกับผู้ใช้ (เป็นภาษาไทย) เพื่อรับหัวข้อที่สนใจ (เช่น 'เจงกิสข่าน', 'สงครามเย็น') จากนั้นจะบันทึกหัวข้อลงใน State และส่งมอบหมายงานต่อให้กับ historical_court_system เพื่อเริ่มกระบวนการ
 
-2.  **`historical_court_system` (The Main Workflow)**
-    *   **ประเภท:** `SequentialAgent`
-    *   **หน้าที่:** เป็น Agent หลักที่ควบคุมลำดับการทำงานทั้งหมด โดยจะสั่งให้ `the_trial` ทำงานก่อน ตามด้วย `verdict_agent`
+2.  historical_court_system (The Main Workflow)
+    *   ประเภท: SequentialAgent
+    *   หน้าที่: เป็น Agent หลักที่ควบคุมลำดับการทำงานทั้งหมดโดยจะสั่งให้ the_trial ทำงานก่อนตามด้วย verdict_agent
 
-3.  **`the_trial` (The Trial & Review)**
-    *   **ประเภท:** `LoopAgent`
-    *   **หน้าที่:** จำลองกระบวนการสืบสวนและพิจารณาคดี โดยจะวนทำงานซ้ำ (สูงสุด 3 รอบ) เพื่อให้ได้ข้อมูลที่สมดุลที่สุด
-    *   **Sub-Agents:**
-        *   `investigation_team`
-        *   `judge_agent`
+3.  the_trial (The Trial & Review)
+    *   ประเภท: LoopAgent
+    *   หน้าที่: จำลองกระบวนการสืบสวนและพิจารณาคดี โดยจะวนทำงานซ้ำ (สูงสุด 3 รอบ) เพื่อให้ได้ข้อมูลที่สมดุลที่สุด
+    *   Sub-Agents:
+        *  investigation_team
+        *  judge_agent
 
-4.  **`investigation_team` (The Investigation Team)**
-    *   **ประเภท:** `ParallelAgent`
-    *   **หน้าที่:** สั่งให้ Agent ลูกทำงานสืบค้นข้อมูลพร้อมกัน
-    *   **Sub-Agents:**
-        *   **`admirer_agent` (The Admirer):** ค้นหาข้อมูลเกี่ยวกับ "ความสำเร็จ", "ข้อดี", และ "ผลกระทบเชิงบวก" ของหัวข้อที่กำหนดโดยใช้ Wikipedia สรุปผลเป็นภาษาไทย และบันทึกลง State ใน key `positive_research`
-        *   **`critic_agent` (The Critic):** ค้นหาข้อมูลเกี่ยวกับ "ความผิดพลาด", "ความล้มเหลว", "ข้อวิจารณ์", และ "ผลกระทบเชิงลบ" ของหัวข้อที่กำหนด สรุปผลเป็นภาษาไทย และบันทึกลง State ใน key `negative_research`
+4.  investigation_team (The Investigation Team)
+    *   ประเภท: ParallelAgent
+    *   หน้าที่: สั่งให้ Agent ลูกทำงานสืบค้นข้อมูลพร้อมกัน
+    *   Sub-Agents:
+        *  admirer_agent (The Admirer): ค้นหาข้อมูลเกี่ยวกับ "ความสำเร็จ", "ข้อดี", และ "ผลกระทบเชิงบวก" ของหัวข้อที่กำหนดโดยใช้ Wikipedia สรุปผลเป็นภาษาไทย และบันทึกลง State ใน key positive_research
+        *  critic_agent (The Critic): ค้นหาข้อมูลเกี่ยวกับ "ความผิดพลาด", "ความล้มเหลว", "ข้อวิจารณ์", และ "ผลกระทบเชิงลบ" ของหัวข้อที่กำหนด สรุปผลเป็นภาษาไทย และบันทึกลง State ใน key negative_research
 
-5.  **`judge_agent` (The Judge)**
-    *   **ประเภท:** `Agent`
-    *   **หน้าที่:** หลังจากทีมสืบสวนรวบรวมข้อมูลเสร็จในแต่ละรอบ `judge_agent` จะเข้ามาประเมินข้อมูลจากทั้งสองฝ่าย
+5.  judge_agent (The Judge)
+    *   ประเภท: Agent
+    *   หน้าที่: หลังจากทีมสืบสวนรวบรวมข้อมูลเสร็จในแต่ละรอบ judge_agent จะเข้ามาประเมินข้อมูลจากทั้งสองฝ่าย
         *   หากข้อมูลยังไม่สมดุล จะให้ข้อเสนอแนะเพื่อการสืบค้นเพิ่มเติมในรอบถัดไป
-        *   หากข้อมูลสมดุลและเพียงพอแล้ว จะสั่งให้ `exit_loop` เพื่อสิ้นสุดกระบวนการของ `the_trial`
+        *   หากข้อมูลสมดุลและเพียงพอแล้ว จะสั่งให้ exit_loop เพื่อสิ้นสุดกระบวนการของ the_trial
 
-6.  **`verdict_agent` (The Verdict)**
-    *   **ประเภท:** `Agent`
-    *   **หน้าที่:** เป็น Agent สุดท้ายในกระบวนการ มีหน้าที่รวบรวมข้อมูล `positive_research` และ `negative_research` ทั้งหมดมาเขียนเป็นรายงานสรุปเปรียบเทียบที่เป็นกลาง (เป็นภาษาไทย) และบันทึกเป็นไฟล์ `.txt` ลงในไดเรกทอรี `historical_reports`
+6.  verdict_agent (The Verdict)
+    *   ประเภท: Agent
+    *   หน้าที่: เป็น Agent สุดท้ายในกระบวนการ มีหน้าที่รวบรวมข้อมูล positive_research และ negative_research ทั้งหมดมาเขียนเป็นรายงานสรุปเปรียบเทียบที่เป็นกลาง (เป็นภาษาไทย) และบันทึกเป็นไฟล์ .txt ลงในไดเรกทอรี historical_reports
 
 ## เครื่องมือ (Tools) ที่ใช้
-*   **`append_to_state`:** เครื่องมือแบบกำหนดเองสำหรับเพิ่มข้อมูลเข้าไปใน State ของ Agent
-*   **`write_file`:** เครื่องมือแบบกำหนดเองสำหรับสร้างและบันทึกไฟล์
-*   **`WikipediaQueryRun`:** เครื่องมือจาก LangChain สำหรับค้นหาข้อมูลใน Wikipedia
-*   **`exit_loop`:** เครื่องมือมาตรฐานของ ADK สำหรับจบการทำงานของ `LoopAgent`
+*   append_to_state: เครื่องมือแบบกำหนดเองสำหรับเพิ่มข้อมูลเข้าไปใน State ของ Agent
+*   write_file: เครื่องมือแบบกำหนดเองสำหรับสร้างและบันทึกไฟล์
+*   WikipediaQueryRun: เครื่องมือจาก LangChain สำหรับค้นหาข้อมูลใน Wikipedia
+*   exit_loop: เครื่องมือมาตรฐานของ ADK สำหรับจบการทำงานของ LoopAgent
 
 # การตั้งค่าและการใช้งาน
-
 1.  **ติดตั้ง Dependencies:**
     pip install -r requirements.txt
 2.  **ตั้งค่า Environment Variables:**
-    สร้างไฟล์ `.env` ในไดเรกทอรีหลักและกำหนดค่าตัวแปรที่จำเป็น:
+    สร้างไฟล์ .env ในไดเรกทอรีหลักและกำหนดค่าตัวแปรที่จำเป็น:
     MODEL="gemini-1.5-flash"
     ### เพิ่ม Google Cloud/API keys อื่นๆ ที่จำเป็น
-
 3.  **รันโปรแกรม:**
 4.  **ผลลัพธ์:**
-    ไฟล์รายงานจะถูกสร้างขึ้นในไดเรกทอรี `/historical_reports`
+    ไฟล์รายงานจะถูกสร้างขึ้นในไดเรกทอรี /historical_reports
